@@ -1,0 +1,169 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MCP Tool Configuration Schema",
+  "type": "object",
+  "required": ["version", "agents", "workflow", "protocols"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Version of the MCP configuration"
+    },
+    "agents": {
+      "type": "object",
+      "description": "Definition of available agents",
+      "patternProperties": {
+        "^[a-zA-Z_][a-zA-Z0-9_]*$": {
+          "type": "object",
+          "required": ["type", "role", "capabilities"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["claude", "executor", "planner", "researcher", "synthesizer"]
+            },
+            "role": {
+              "type": "string",
+              "description": "Primary role of the agent"
+            },
+            "model": {
+              "type": "string",
+              "description": "AI model to use (if applicable)"
+            },
+            "capabilities": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "List of agent capabilities"
+            },
+            "config": {
+              "type": "object",
+              "description": "Agent-specific configuration"
+            }
+          }
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["stages", "routing"],
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "agents"],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "parallel": {
+                "type": "boolean",
+                "default": false
+              },
+              "timeout": {
+                "type": "integer",
+                "description": "Timeout in seconds"
+              }
+            }
+          }
+        },
+        "routing": {
+          "type": "object",
+          "properties": {
+            "default_route": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["if", "then"],
+                "properties": {
+                  "if": {
+                    "type": "object",
+                    "description": "Condition to check"
+                  },
+                  "then": {
+                    "type": "string",
+                    "description": "Next stage to route to"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "protocols": {
+      "type": "object",
+      "required": ["message_format", "error_handling"],
+      "properties": {
+        "message_format": {
+          "type": "object",
+          "required": ["version", "structure"],
+          "properties": {
+            "version": {
+              "type": "string"
+            },
+            "structure": {
+              "type": "object",
+              "required": ["type", "properties"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["json"]
+                },
+                "properties": {
+                  "type": "object",
+                  "required": ["required", "optional"],
+                  "properties": {
+                    "required": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "optional": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "error_handling": {
+          "type": "object",
+          "required": ["retry_policy", "fallback_strategy"],
+          "properties": {
+            "retry_policy": {
+              "type": "object",
+              "properties": {
+                "max_retries": {
+                  "type": "integer"
+                },
+                "delay": {
+                  "type": "integer",
+                  "description": "Delay between retries in seconds"
+                }
+              }
+            },
+            "fallback_strategy": {
+              "type": "string",
+              "enum": ["retry", "skip", "terminate"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
