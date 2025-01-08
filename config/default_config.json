@@ -1,0 +1,141 @@
+{
+  "version": "1.0.0",
+  "agents": {
+    "planner": {
+      "type": "claude",
+      "role": "task_planning",
+      "model": "claude-3-opus-20240229",
+      "capabilities": [
+        "task_breakdown",
+        "strategy_planning",
+        "requirement_analysis"
+      ],
+      "config": {
+        "temperature": 0.7,
+        "max_tokens": 1000
+      }
+    },
+    "executor": {
+      "type": "executor",
+      "role": "task_execution",
+      "model": "claude-3-opus-20240229",
+      "capabilities": [
+        "code_generation",
+        "data_analysis",
+        "task_execution"
+      ],
+      "config": {
+        "temperature": 0.2,
+        "max_tokens": 2000
+      }
+    },
+    "researcher": {
+      "type": "researcher",
+      "role": "information_gathering",
+      "model": "claude-3-opus-20240229",
+      "capabilities": [
+        "data_retrieval",
+        "information_synthesis",
+        "source_validation"
+      ],
+      "config": {
+        "temperature": 0.5,
+        "max_tokens": 1500
+      }
+    },
+    "synthesizer": {
+      "type": "synthesizer",
+      "role": "result_integration",
+      "model": "claude-3-opus-20240229",
+      "capabilities": [
+        "result_combination",
+        "summary_generation",
+        "quality_check"
+      ],
+      "config": {
+        "temperature": 0.3,
+        "max_tokens": 1000
+      }
+    }
+  },
+  "workflow": {
+    "stages": [
+      {
+        "name": "planning",
+        "agents": ["planner"],
+        "parallel": false,
+        "timeout": 30
+      },
+      {
+        "name": "research",
+        "agents": ["researcher"],
+        "parallel": true,
+        "timeout": 60
+      },
+      {
+        "name": "execution",
+        "agents": ["executor"],
+        "parallel": false,
+        "timeout": 120
+      },
+      {
+        "name": "synthesis",
+        "agents": ["synthesizer"],
+        "parallel": false,
+        "timeout": 30
+      }
+    ],
+    "routing": {
+      "default_route": "planning",
+      "conditions": [
+        {
+          "if": {
+            "requires_research": true
+          },
+          "then": "research"
+        },
+        {
+          "if": {
+            "task_planned": true
+          },
+          "then": "execution"
+        },
+        {
+          "if": {
+            "execution_complete": true
+          },
+          "then": "synthesis"
+        }
+      ]
+    }
+  },
+  "protocols": {
+    "message_format": {
+      "version": "1.0",
+      "structure": {
+        "type": "json",
+        "properties": {
+          "required": [
+            "message_id",
+            "timestamp",
+            "sender",
+            "receiver",
+            "content"
+          ],
+          "optional": [
+            "context",
+            "metadata",
+            "dependencies"
+          ]
+        }
+      }
+    },
+    "error_handling": {
+      "retry_policy": {
+        "max_retries": 3,
+        "delay": 5
+      },
+      "fallback_strategy": "retry"
+    }
+  }
+}
